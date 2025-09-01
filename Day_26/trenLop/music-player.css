@@ -69,6 +69,10 @@ header h2 {
     width: 200px;
 }
 
+.cd.playing {
+    animation: cd-rotate linear 5s infinite;
+}
+
 .cd-thumb {
     width: 100%;
     padding-top: 100%;
@@ -76,6 +80,12 @@ header h2 {
     background-color: #333;
     background-size: cover;
     margin: auto;
+}
+
+@keyframes cd-rotate {
+    to {
+        rotate: 360deg;
+    }
 }
 
 /* CONTROL */
