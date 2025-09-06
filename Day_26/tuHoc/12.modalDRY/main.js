@@ -31,10 +31,8 @@ function Modal(options = {}) {
 
     /* TÍNH ĐỘ DÀI SCROLLBAR */
 
-    function getScrollbarWidth() {
-        if (getScrollbarWidth.value) {
-            return getScrollbarWidth.value;
-        }
+    this._getScrollbarWidth = () => {
+        if (this._scrollbarWidth) return this._scrollbarWidth;
 
         const div = document.createElement("div");
         Object.assign(div.style, {
@@ -47,15 +45,13 @@ function Modal(options = {}) {
         document.body.appendChild(div);
 
         // Kích thước thanh cuộn
-        const scrollbarWidth = div.offsetWidth - div.clientWidth;
+        this._scrollbarWidth = div.offsetWidth - div.clientWidth;
 
         // Remove div
         document.body.removeChild(div);
 
-        // Set thuộc tính value
-        getScrollbarWidth.value = scrollbarWidth;
-        return scrollbarWidth;
-    }
+        return this._scrollbarWidth;
+    };
 
     /* BUILD PHẦN TỬ */
 
@@ -79,14 +75,13 @@ function Modal(options = {}) {
 
         if (this._allowButtonClose) {
             // Tạo nút đóng
-            const closeBtn = document.createElement("button");
-            closeBtn.className = "modal-close";
-            closeBtn.innerHTML = "&times;";
+            const closeBtn = this._createButton(
+                "&times;",
+                "modal-close",
+                this.close
+            );
 
             container.append(closeBtn);
-
-            // Click vào nút Close
-            closeBtn.onclick = () => this.close();
         }
 
         // Tạo modal content
@@ -102,15 +97,9 @@ function Modal(options = {}) {
             this._modalFooter = document.createElement("div");
             this._modalFooter.className = "modal-footer";
 
-            // Nếu _footerContent tồn tại
-            if (this._footerContent) {
-                this._modalFooter.innerHTML = this._footerContent;
-            }
+            this._renderFooterContent();
 
-            // Lặp qua mảng chứa các nút
-            this._footerButtons.forEach((button) => {
-                this._modalFooter.append(button);
-            });
+            this._renderFooterButtons();
 
             container.append(this._modalFooter);
         }
@@ -131,25 +120,47 @@ function Modal(options = {}) {
     /* THÊM HTML VÀO FOOTER */
     this.setFooterContent = (html) => {
         this._footerContent = html;
-
-        if (this._modalFooter) {
-            this._modalFooter.innerHTML = html;
-        }
+        this._renderFooterContent();
     };
 
-    /* Thuộc tính lưu các button */
-
+    /* Thuộc tính lưu các button ở footer */
     this._footerButtons = [];
 
     /* XỬ LÝ THÊM BUTTON VÀO FOOTER */
     this.addFooterButton = (title, cssClass, callback) => {
+        const button = this._createButton(title, cssClass, callback);
+
+        // Thêm button vào mảng
+        this._footerButtons.push(button);
+
+        this._renderFooterButtons();
+    };
+
+    /* RENDER FOOTER CONTENT */
+    this._renderFooterContent = () => {
+        if (this._modalFooter && this._footerContent) {
+            this._modalFooter.innerHTML = this._footerContent;
+        }
+    };
+
+    /* RENDER FOOTER BUTTON */
+    this._renderFooterButtons = () => {
+        if (this._modalFooter) {
+            // Lặp qua mảng chứa các nút
+            this._footerButtons.forEach((button) => {
+                this._modalFooter.append(button);
+            });
+        }
+    };
+
+    /* XỬ LÝ TẠO BUTTON */
+    this._createButton = (title, cssClass, callback) => {
         const button = document.createElement("button");
         button.className = cssClass;
         button.innerHTML = title;
         button.onclick = callback;
 
-        // Thêm button vào mảng
-        this._footerButtons.push(button);
+        return button;
     };
 
     /* MỞ MODAL */
@@ -190,11 +201,9 @@ function Modal(options = {}) {
 
         // Disable Scrolling
         document.body.classList.add("no-scroll");
-        document.body.style.paddingRight = getScrollbarWidth() + "px";
+        document.body.style.paddingRight = this._getScrollbarWidth() + "px";
 
-        this._onTransitionEnd(() => {
-            if (typeof onClose === "function") onOpen();
-        });
+        this._onTransitionEnd(onOpen);
 
         return this._backdrop;
     };
@@ -234,7 +243,7 @@ function Modal(options = {}) {
                 document.body.classList.remove("no-scroll");
                 document.body.style.paddingRight = "";
             }
-            
+
             if (typeof onClose === "function") onClose();
         });
     };
@@ -315,7 +324,7 @@ const modal3 = new Modal({
     },
 });
 
-// modal3.setFooterContent("<h1>Hẹ hẹ2</h1>");
+// modal3.setFooterContent("<h1>Hẹ hẹ3</h1>");
 
 /* Kỳ vọng */
 
